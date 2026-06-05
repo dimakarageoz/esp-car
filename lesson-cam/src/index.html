@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель управления</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #1e1e24;
+            color: #ffffff;
+        }
+
+        /* Главный контейнер: делим экран на две колонки */
+        .main-container {
+            display: grid;
+            grid-template-columns: 640px 1fr; /* Левая колонка фиксированная, правая — свободная */
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Левая колонка с видео и управлением */
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Контейнер для видео-фрейма */
+        .video-frame {
+            width: 100%;
+            height: 480px;
+            border: 2px solid #3f3f46;
+            border-radius: 8px;
+            background-color: #000;
+            object-fit: cover; /* Чтобы картинка аккуратно вписывалась в рамки */
+            transform: rotate(180deg);
+        }
+
+        /* Сетка для клавиатурных кнопок */
+        .keyboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            grid-template-rows: repeat(2, 60px);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        /* Стили самих кнопок */
+        .key {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 60px;
+            height: 60px;
+            background-color: #3f3f46;
+            border: 2px solid #71717a;
+            border-radius: 6px;
+            font-size: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 #27272a;
+            user-select: none;
+        }
+
+        /* Позиционируем кнопку W по центру в первом ряду */
+        .key-w {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        /* Позиционируем A, S, D во втором ряду */
+        .key-a { grid-column: 1; grid-row: 2; }
+        .key-s { grid-column: 2; grid-row: 2; }
+        .key-d { grid-column: 3; grid-row: 2; }
+
+        /* Правая колонка */
+        .right-panel {
+            border: 2px dashed #52525b;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #a1a1aa;
+        }
+
+        .light-control {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            color: #e5e7eb;
+        }
+
+        .control-button {
+            min-width: 160px;
+            padding: 12px 18px;
+            background-color: #2563eb;
+            border: none;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .control-button:hover {
+            background-color: #1d4ed8;
+        }
+
+        .control-button.active {
+            background-color: #ea580c;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        
+        <div class="left-panel">
+            <img id="video-stream" class="video-frame" alt="Camera Stream" />
+            
+            <div class="keyboard-grid">
+                <div class="key key-w">W</div>
+                <div class="key key-a">A</div>
+                <div class="key key-s">S</div>
+                <div class="key key-d">D</div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="light-control">
+                <p>Управление светом</p>
+                <button id="light-toggle" class="control-button">Light ON/OFF</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const imgElement = document.getElementById("video-stream");
+            const lightToggle = document.getElementById("light-toggle");
+
+            function fetchNextFrame() {
+                // Добавляем текущее время (timestamp) в запрос, чтобы избежать кеширования браузером
+                const cacheBuster = new Date().getTime();
+                imgElement.src = `/capture?t=${cacheBuster}`;
+            }
+
+            lightToggle.addEventListener('click', async () => {
+                try {
+                    const response = await fetch('/light');
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error('Не удалось переключить свет:', error);
+                }
+            });
+
+            // Когда картинка успешно загрузилась, ждем 100мс и запрашиваем новую
+            imgElement.onload = () => {
+                setTimeout(fetchNextFrame, 0);
+            };
+
+            // Если произошла ошибка (например, сервер не успел ответить), 
+            // ждем немного дольше перед следующей попыткой, чтобы не заспамить сервер
+            imgElement.onerror = () => {
+                setTimeout(fetchNextFrame, 1000);
+            };
+
+            // Запускаем цикл при загрузке страницы
+            fetchNextFrame();
+        });
+    </script>
+</body>
+</html>
