@@ -15,13 +15,13 @@
 
 static const char *TAG = "ESP32_CAM_APP";
 
-// --- Настройки WiFi ---
-// #define WIFI_SSID      "Pixel_3722"
-// #define WIFI_PASS      "ws5200pixel"
-#define WIFI_SSID      "HUAWEI-WS5200_EXT"
-#define WIFI_PASS      "ws520036"
-// #define WIFI_SSID      "YOUR_WIFI_SSID"
-// #define WIFI_PASS      "YOUR_WIFI_PASSWORD"
+#ifndef WIFI_SSID
+  #error "WIFI_SSID is not defined! Please define it in platformio.ini."
+#endif
+
+#ifndef WIFI_PASSWORD
+  #error "WIFI_PASSWORD is not defined! Please define it in platformio.ini."
+#endif
 
 #define CAM_PIN_PWDN 32
 #define CAM_PIN_RESET -1
